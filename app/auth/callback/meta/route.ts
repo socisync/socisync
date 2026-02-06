@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -18,11 +17,6 @@ export async function GET(request: NextRequest) {
 
   try {
     // Exchange code for access token
-    const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    }.toString() + `?client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&code=${code}&redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_APP_URL + '/auth/callback/meta')}`)
-
     const tokenUrl = new URL('https://graph.facebook.com/v18.0/oauth/access_token')
     tokenUrl.searchParams.set('client_id', process.env.META_APP_ID!)
     tokenUrl.searchParams.set('client_secret', process.env.META_APP_SECRET!)
@@ -52,12 +46,7 @@ export async function GET(request: NextRequest) {
     const longLivedToken = longLivedData.access_token || access_token
     const tokenExpiry = longLivedData.expires_in || expires_in
 
-    // Get user's pages
-    const pagesRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${longLivedToken}`)
-    const pagesData = await pagesRes.json()
-
-    // Store in session/temp storage for user to select which page to connect
-    // For now, redirect to a page selection screen
+    // Redirect to page selection screen with token
     const returnUrl = new URL('/dashboard/connect/meta/select', request.url)
     returnUrl.searchParams.set('token', longLivedToken)
     returnUrl.searchParams.set('expires', tokenExpiry?.toString() || '')
