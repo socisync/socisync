@@ -1,105 +1,106 @@
-import { Plus, Search, MoreVertical } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase-server'
+import Link from 'next/link'
+import { Plus, Search } from 'lucide-react'
 
-export default function Clients() {
+export default async function ClientsPage() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Get user's agency
+  const { data: membership } = await supabase
+    .from('agency_members')
+    .select('agency_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!membership) {
+    redirect('/onboarding')
+  }
+
+  // Get all clients
+  const { data: clients } = await supabase
+    .from('clients')
+    .select(`
+      *,
+      connected_accounts(count)
+    `)
+    .eq('agency_id', membership.agency_id)
+    .order('name')
+
   return (
-    <div className="p-8">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
-          <p className="text-slate-500">Manage your client accounts and connections.</p>
+          <p className="text-slate-500">{clients?.length || 0} total clients</p>
         </div>
-        <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Add Client
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input 
-            type="text"
-            placeholder="Search clients..."
-            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-          />
-        </div>
+        <Link 
+          href="/dashboard/clients/new"
+          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Add Client
+        </Link>
       </div>
 
       {/* Clients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <ClientCard 
-          name="Acme Corp"
-          platforms={['Meta', 'LinkedIn']}
-          accounts={4}
-          status="active"
-        />
-        <ClientCard 
-          name="TechStart Ltd"
-          platforms={['Meta', 'YouTube', 'TikTok']}
-          accounts={5}
-          status="active"
-        />
-        <ClientCard 
-          name="Local Bakery"
-          platforms={['Meta']}
-          accounts={2}
-          status="active"
-        />
-        <ClientCard 
-          name="Fitness Pro"
-          platforms={['Meta', 'TikTok']}
-          accounts={3}
-          status="active"
-        />
-        <ClientCard 
-          name="City Plumbers"
-          platforms={['Meta', 'LinkedIn']}
-          accounts={3}
-          status="pending"
-        />
-        
-        {/* Add New Client Card */}
-        <button className="border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-primary-400 hover:bg-primary-50 transition flex flex-col items-center justify-center text-slate-400 hover:text-primary-600 min-h-[200px]">
-          <Plus className="w-8 h-8 mb-2" />
-          <span className="font-medium">Add New Client</span>
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ClientCard({ name, platforms, accounts, status }: { 
-  name: string, 
-  platforms: string[], 
-  accounts: number,
-  status: 'active' | 'pending' 
-}) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-          {name.charAt(0)}
+      {clients && clients.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {clients.map((client) => (
+            <Link
+              key={client.id}
+              href={`/dashboard/clients/${client.id}`}
+              className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md hover:border-slate-300 transition"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-semibold text-slate-600">
+                    {client.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-slate-900 truncate">{client.name}</h3>
+                  {client.website && (
+                    <p className="text-sm text-slate-500 truncate">{client.website}</p>
+                  )}
+                  {client.industry && (
+                    <span className="inline-block mt-2 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full capitalize">
+                      {client.industry}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-sm">
+                <span className="text-slate-500">
+                  {(client.connected_accounts as any)?.[0]?.count || 0} connected accounts
+                </span>
+                <span className={client.is_active ? 'text-green-600' : 'text-slate-400'}>
+                  {client.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </Link>
+          ))}
         </div>
-        <button className="text-slate-400 hover:text-slate-600">
-          <MoreVertical className="w-5 h-5" />
-        </button>
-      </div>
-      
-      <h3 className="font-semibold text-slate-900 mb-1">{name}</h3>
-      <p className="text-sm text-slate-500 mb-4">{platforms.join(' • ')}</p>
-      
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-500">{accounts} accounts connected</span>
-        <span className={`text-xs px-2 py-1 rounded-full ${
-          status === 'active' 
-            ? 'bg-green-100 text-green-700' 
-            : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          {status === 'active' ? 'Active' : 'Pending'}
-        </span>
-      </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 className="font-semibold text-slate-900 mb-2">No clients yet</h3>
+          <p className="text-slate-500 mb-6">Add your first client to start managing their social accounts</p>
+          <Link 
+            href="/dashboard/clients/new"
+            className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition"
+          >
+            <Plus className="w-4 h-4" /> Add Your First Client
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
