@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', report_id)
 
-    // Return PDF as download
-    return new NextResponse(pdfBuffer, {
+    // Return PDF as download (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${report.title.replace(/[^a-z0-9]/gi, '_')}.pdf"`,
