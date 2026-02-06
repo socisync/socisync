@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, FileText, Calendar, Download, Send, Clock } from 'lucide-react'
+import { Plus, FileText, Calendar, Download, Send, Clock, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 
 interface Report {
@@ -82,12 +82,21 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
           <p className="text-slate-500">{reports.length} reports generated</p>
         </div>
-        <Link
-          href="/dashboard/reports/new"
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" /> Create Report
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/reports/settings"
+            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition"
+            title="Report Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/dashboard/reports/new"
+            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Create Report
+          </Link>
+        </div>
       </div>
 
       {reports.length > 0 ? (
