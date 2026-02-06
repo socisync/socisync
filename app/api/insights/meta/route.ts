@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getPageInsights, getInstagramInsights } from '@/lib/meta-api'
+import { 
+  getPageInsights, 
+  getInstagramInsights,
+  getPageDemographics,
+  getInstagramDemographics,
+  getRecentPosts,
+  getInstagramMedia
+} from '@/lib/meta-api'
 
 // Create admin client for API routes
 const supabase = createClient(
@@ -11,6 +18,7 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const accountId = searchParams.get('account_id')
+  const include = searchParams.get('include') || 'insights' // insights,demographics,posts,all
 
   if (!accountId) {
     return NextResponse.json({ error: 'account_id required' }, { status: 400 })
@@ -32,15 +40,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No access token' }, { status: 400 })
     }
 
-    let insights = null
-
-    if (account.platform_account_type === 'facebook_page') {
-      insights = await getPageInsights(account.platform_account_id, account.access_token)
-    } else if (account.platform_account_type === 'instagram_business') {
-      insights = await getInstagramInsights(account.platform_account_id, account.access_token)
+    const response: Record<string, any> = {
+      account_type: account.platform_account_type,
     }
 
-    if (!insights) {
+    const shouldInclude = (key: string) => 
+      include === 'all' || include.split(',').includes(key)
+
+    if (account.platform_account_type === 'facebook_page') {
+      // Facebook Page
+      if (shouldInclude('insights')) {
+        response.insights = await getPageInsights(account.platform_account_id, account.access_token)
+      }
+      if (shouldInclude('demographics')) {
+        response.demographics = await getPageDemographics(account.platform_account_id, account.access_token)
+      }
+      if (shouldInclude('posts')) {
+        response.posts = await getRecentPosts(account.platform_account_id, account.access_token, 25)
+      }
+    } else if (account.platform_account_type === 'instagram_business') {
+      // Instagram Business
+      if (shouldInclude('insights')) {
+        response.insights = await getInstagramInsights(account.platform_account_id, account.access_token)
+      }
+      if (shouldInclude('demographics')) {
+        response.demographics = await getInstagramDemographics(account.platform_account_id, account.access_token)
+      }
+      if (shouldInclude('posts')) {
+        response.posts = await getInstagramMedia(account.platform_account_id, account.access_token, 25)
+      }
+    }
+
+    if (!response.insights && shouldInclude('insights')) {
       return NextResponse.json({ error: 'Failed to fetch insights' }, { status: 500 })
     }
 
@@ -50,7 +81,7 @@ export async function GET(request: NextRequest) {
       .update({ last_synced_at: new Date().toISOString() })
       .eq('id', accountId)
 
-    return NextResponse.json({ insights, account_type: account.platform_account_type })
+    return NextResponse.json(response)
   } catch (err: any) {
     console.error('Insights API error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })

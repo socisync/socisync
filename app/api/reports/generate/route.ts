@@ -66,9 +66,18 @@ export async function POST(request: NextRequest) {
             if (insights) {
               metrics.push(
                 { label: 'Facebook Followers', value: insights.followers, platform: 'facebook' },
+                { label: 'Page Likes', value: insights.pageLikes, platform: 'facebook' },
                 { label: 'Page Views', value: insights.pageViews, platform: 'facebook' },
+                { label: 'Reach', value: insights.reach, platform: 'facebook' },
+                { label: 'Impressions', value: insights.impressions, platform: 'facebook' },
                 { label: 'Post Reach', value: insights.postReach, platform: 'facebook' },
-                { label: 'Post Engagement', value: insights.postEngagement, platform: 'facebook' }
+                { label: 'Engagements', value: insights.engagements, platform: 'facebook' },
+                { label: 'Engaged Users', value: insights.engagedUsers, platform: 'facebook' },
+                { label: 'Reactions', value: insights.reactions, platform: 'facebook' },
+                { label: 'Clicks', value: insights.clicks, platform: 'facebook' },
+                { label: 'Video Views', value: insights.videoViews, platform: 'facebook' },
+                { label: 'New Likes', value: insights.newLikes, platform: 'facebook' },
+                { label: 'New Followers', value: insights.newFollowers, platform: 'facebook' },
               )
             }
           } else if (account.platform_account_type === 'instagram_business') {
@@ -81,9 +90,18 @@ export async function POST(request: NextRequest) {
             if (insights) {
               metrics.push(
                 { label: 'Instagram Followers', value: insights.followers, platform: 'instagram' },
+                { label: 'Following', value: insights.following, platform: 'instagram' },
+                { label: 'Posts', value: insights.mediaCount, platform: 'instagram' },
                 { label: 'Profile Views', value: insights.profileViews, platform: 'instagram' },
-                { label: 'Instagram Reach', value: insights.reach, platform: 'instagram' },
-                { label: 'Impressions', value: insights.impressions, platform: 'instagram' }
+                { label: 'Reach', value: insights.reach, platform: 'instagram' },
+                { label: 'Impressions', value: insights.impressions, platform: 'instagram' },
+                { label: 'Accounts Engaged', value: insights.accountsEngaged, platform: 'instagram' },
+                { label: 'Total Interactions', value: insights.totalInteractions, platform: 'instagram' },
+                { label: 'Likes', value: insights.likes, platform: 'instagram' },
+                { label: 'Comments', value: insights.comments, platform: 'instagram' },
+                { label: 'Shares', value: insights.shares, platform: 'instagram' },
+                { label: 'Saves', value: insights.saves, platform: 'instagram' },
+                { label: 'Website Clicks', value: insights.websiteClicks, platform: 'instagram' },
               )
             }
           }
