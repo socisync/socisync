@@ -416,6 +416,51 @@ export default function ClientDetailPage() {
         onAdd={handleAddWidget}
         accounts={accounts}
       />
+
+      {/* Connect Account Modal (for when no accounts exist) */}
+      {showConnectMenu && accounts.length === 0 && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowConnectMenu(false)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-white rounded-xl shadow-xl z-50 p-4">
+            <h3 className="font-semibold text-slate-900 mb-4">Connect Account</h3>
+            <div className="space-y-2">
+              <button onClick={connectMeta} className="w-full p-3 text-left hover:bg-slate-50 rounded-lg flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Facebook className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-slate-900">Facebook / Instagram</div>
+                  <div className="text-xs text-slate-500">Pages & Business accounts</div>
+                </div>
+              </button>
+              <button onClick={connectLinkedIn} className="w-full p-3 text-left hover:bg-slate-50 rounded-lg flex items-center gap-3">
+                <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                  <Linkedin className="w-5 h-5 text-sky-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-slate-900">LinkedIn</div>
+                  <div className="text-xs text-slate-500">Company pages</div>
+                </div>
+              </button>
+              <button onClick={connectYouTube} className="w-full p-3 text-left hover:bg-slate-50 rounded-lg flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Youtube className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-slate-900">YouTube</div>
+                  <div className="text-xs text-slate-500">Channels & analytics</div>
+                </div>
+              </button>
+            </div>
+            <button
+              onClick={() => setShowConnectMenu(false)}
+              className="w-full mt-4 py-2 text-slate-500 hover:text-slate-700 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
