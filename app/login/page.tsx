@@ -2,27 +2,31 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 
 export default function Login() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [debug, setDebug] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setDebug(null)
     setLoading(true)
 
     try {
       const supabase = createClient()
+      setDebug('Calling signInWithPassword...')
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+
+      setDebug(`Response: ${JSON.stringify({ user: data?.user?.email, error: error?.message })}`)
 
       if (error) {
         setError(error.message)
@@ -31,11 +35,18 @@ export default function Login() {
       }
 
       if (data.user) {
-        // Force a hard navigation to ensure cookies are set
-        window.location.href = '/dashboard'
+        setDebug('Login success, redirecting...')
+        // Small delay to ensure session is saved
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 500)
+      } else {
+        setError('No user returned')
+        setLoading(false)
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')
+      setDebug(`Catch error: ${err.message}`)
       setLoading(false)
     }
   }
@@ -66,6 +77,12 @@ export default function Login() {
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                 {error}
+              </div>
+            )}
+            
+            {debug && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-mono text-xs">
+                {debug}
               </div>
             )}
 
