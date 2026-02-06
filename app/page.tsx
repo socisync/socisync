@@ -20,7 +20,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Socisync" className="h-10 rounded" />
+              <img src="/logo.svg" alt="Socisync" className="h-8" />
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               <Link href="#features" className="text-gray-300 hover:text-white transition">Features</Link>
@@ -277,7 +277,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Socisync" className="h-8 rounded" />
+              <img src="/logo.svg" alt="Socisync" className="h-6" />
             </div>
             <div className="flex gap-8 text-sm text-gray-400">
               <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
