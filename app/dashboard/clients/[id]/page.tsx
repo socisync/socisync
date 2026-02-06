@@ -124,9 +124,12 @@ export default function ClientDetailPage() {
     setLoadingInsights(prev => ({ ...prev, [accountId]: true }))
     
     try {
-      const endpoint = platform === 'linkedin' 
-        ? `/api/insights/linkedin?account_id=${accountId}`
-        : `/api/insights/meta?account_id=${accountId}`
+      let endpoint = `/api/insights/meta?account_id=${accountId}`
+      if (platform === 'linkedin') {
+        endpoint = `/api/insights/linkedin?account_id=${accountId}`
+      } else if (platform === 'youtube') {
+        endpoint = `/api/insights/youtube?account_id=${accountId}`
+      }
       
       const res = await fetch(endpoint)
       const data = await res.json()
@@ -163,6 +166,21 @@ export default function ClientDetailPage() {
     const state = clientId
     
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientIdEnv}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`
+    
+    window.location.href = authUrl
+  }
+
+  const connectYouTube = () => {
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!googleClientId) {
+      alert('YouTube integration not configured yet')
+      return
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/youtube`)
+    const scope = encodeURIComponent('https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly')
+    const state = clientId
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`
     
     window.location.href = authUrl
   }
@@ -273,15 +291,15 @@ export default function ClientDetailPage() {
                     </div>
                   </button>
                   <button
-                    disabled
-                    className="w-full px-4 py-2 text-left flex items-center gap-3 opacity-50 cursor-not-allowed"
+                    onClick={connectYouTube}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
                   >
                     <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                       <Youtube className="w-4 h-4 text-red-600" />
                     </div>
                     <div>
                       <div className="font-medium text-slate-900">YouTube</div>
-                      <div className="text-xs text-slate-500">Coming soon</div>
+                      <div className="text-xs text-slate-500">Channels & analytics</div>
                     </div>
                   </button>
                 </div>
