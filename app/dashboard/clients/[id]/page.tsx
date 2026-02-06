@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Facebook, Linkedin, Youtube, Music2, RefreshCw, Users, Eye, ThumbsUp, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Plus, Facebook, Linkedin, Youtube, Music2, RefreshCw, Users, Eye, ThumbsUp, TrendingUp, Pencil } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 
 interface Client {
@@ -182,7 +182,15 @@ export default function ClientDetailPage() {
             </span>
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
+              <Link 
+                href={`/dashboard/clients/${clientId}/edit`}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <Pencil className="w-4 h-4" />
+              </Link>
+            </div>
             {client.website && (
               <a 
                 href={client.website} 
