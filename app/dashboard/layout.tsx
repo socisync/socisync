@@ -50,7 +50,7 @@ export default function DashboardLayout({
         .single()
 
       if (membership?.agencies) {
-        setAgency(membership.agencies as Agency)
+        setAgency(membership.agencies as unknown as Agency)
       }
 
       setLoading(false)
