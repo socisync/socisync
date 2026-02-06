@@ -1,0 +1,187 @@
+import { jsPDF } from 'jspdf'
+
+export interface ReportMetric {
+  label: string
+  value: number | string
+  change?: number
+  platform?: string
+}
+
+export interface ReportData {
+  title: string
+  clientName: string
+  agencyName: string
+  dateRange: string
+  generatedAt: string
+  metrics: ReportMetric[]
+  summary?: string
+  highlights?: string[]
+}
+
+// Helper function to format numbers
+function formatNumber(num: number): string {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+  return num.toLocaleString()
+}
+
+// Colors
+const colors = {
+  primary: '#1e293b',
+  secondary: '#64748b',
+  accent: '#3b82f6',
+  light: '#f8fafc',
+  border: '#e2e8f0',
+  positive: '#16a34a',
+  negative: '#dc2626',
+}
+
+export function generateReportPDF(data: ReportData): Buffer {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const margin = 20
+  let y = margin
+
+  // Helper to add text and advance y
+  const addText = (text: string, options: {
+    fontSize?: number
+    color?: string
+    fontStyle?: 'normal' | 'bold'
+    maxWidth?: number
+    align?: 'left' | 'center' | 'right'
+  } = {}) => {
+    const { fontSize = 12, color = colors.primary, fontStyle = 'normal', maxWidth = pageWidth - margin * 2, align = 'left' } = options
+    doc.setFontSize(fontSize)
+    doc.setTextColor(color)
+    doc.setFont('helvetica', fontStyle)
+    
+    const lines = doc.splitTextToSize(text, maxWidth)
+    const lineHeight = fontSize * 0.5
+    
+    let x = margin
+    if (align === 'center') x = pageWidth / 2
+    if (align === 'right') x = pageWidth - margin
+    
+    doc.text(lines, x, y, { align })
+    y += lines.length * lineHeight + 2
+    return lines.length * lineHeight
+  }
+
+  // Header
+  addText(data.title, { fontSize: 24, fontStyle: 'bold' })
+  y += 2
+  addText(`${data.clientName} • ${data.dateRange}`, { fontSize: 11, color: colors.secondary })
+  y += 10
+
+  // Executive Summary
+  if (data.summary) {
+    addText('Executive Summary', { fontSize: 14, fontStyle: 'bold' })
+    y += 2
+    // Draw underline
+    doc.setDrawColor(colors.border)
+    doc.line(margin, y - 4, pageWidth - margin, y - 4)
+    y += 4
+    addText(data.summary, { fontSize: 10, color: colors.secondary })
+    y += 8
+  }
+
+  // Key Highlights
+  if (data.highlights && data.highlights.length > 0) {
+    // Blue box background
+    const boxHeight = 8 + data.highlights.length * 6
+    doc.setFillColor('#eff6ff')
+    doc.roundedRect(margin, y, pageWidth - margin * 2, boxHeight, 3, 3, 'F')
+    y += 6
+    
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor('#1e40af')
+    doc.text('Key Highlights', margin + 4, y)
+    y += 5
+    
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    data.highlights.forEach(highlight => {
+      doc.text(`• ${highlight}`, margin + 4, y)
+      y += 5
+    })
+    y += 8
+  }
+
+  // Performance Metrics
+  addText('Performance Metrics', { fontSize: 14, fontStyle: 'bold' })
+  y += 2
+  doc.setDrawColor(colors.border)
+  doc.line(margin, y - 4, pageWidth - margin, y - 4)
+  y += 6
+
+  // Metrics grid (2 columns)
+  const cardWidth = (pageWidth - margin * 2 - 10) / 2
+  const cardHeight = 28
+  let col = 0
+  let rowY = y
+
+  data.metrics.forEach((metric, i) => {
+    const x = margin + col * (cardWidth + 10)
+    
+    // Card background
+    doc.setFillColor(colors.light)
+    doc.roundedRect(x, rowY, cardWidth, cardHeight, 2, 2, 'F')
+    
+    // Label
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(colors.secondary)
+    doc.text(metric.label.toUpperCase(), x + 4, rowY + 6)
+    
+    // Value
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(colors.primary)
+    const valueStr = typeof metric.value === 'number' ? formatNumber(metric.value) : String(metric.value)
+    doc.text(valueStr, x + 4, rowY + 16)
+    
+    // Change indicator
+    if (metric.change !== undefined) {
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      const changeColor = metric.change >= 0 ? colors.positive : colors.negative
+      const arrow = metric.change >= 0 ? '↑' : '↓'
+      doc.setTextColor(changeColor)
+      doc.text(`${arrow} ${Math.abs(metric.change).toFixed(1)}% vs previous`, x + 4, rowY + 23)
+    }
+    
+    col++
+    if (col >= 2) {
+      col = 0
+      rowY += cardHeight + 6
+    }
+  })
+  
+  // If odd number of metrics, move to next row
+  if (col !== 0) {
+    rowY += cardHeight + 6
+  }
+  y = rowY
+
+  // Footer
+  const footerY = pageHeight - 15
+  doc.setDrawColor(colors.border)
+  doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5)
+  
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(colors.secondary)
+  doc.text(`Generated by ${data.agencyName} via Socisync`, margin, footerY)
+  doc.text(data.generatedAt, pageWidth - margin, footerY, { align: 'right' })
+
+  // Return as buffer
+  const arrayBuffer = doc.output('arraybuffer')
+  return Buffer.from(arrayBuffer)
+}

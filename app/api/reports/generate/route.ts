@@ -1,12 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
-
-// Force Node.js runtime (react-pdf doesn't work on Edge)
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-import { renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@supabase/supabase-js'
-import { ReportDocument, type ReportData } from '@/lib/pdf/report-template'
+import { generateReportPDF, type ReportData } from '@/lib/pdf/report-generator'
 import { getPageInsights, getInstagramInsights } from '@/lib/meta-api'
 
 const supabase = createClient(
@@ -122,33 +116,25 @@ export async function POST(request: NextRequest) {
       }),
       metrics,
       summary: `This report covers social media performance for ${report.clients.name} during the period ${new Date(report.date_from).toLocaleDateString()} to ${new Date(report.date_to).toLocaleDateString()}.`,
-      highlights: metrics.length > 0 ? [
+      highlights: metrics.length > 0 && metrics[0].value !== 'Connect accounts to view' ? [
         `${metrics.length} metrics tracked across connected platforms`,
         'Data pulled directly from platform APIs',
       ] : undefined
     }
 
-    // Generate PDF
-    const pdfBuffer = await renderToBuffer(ReportDocument({ data: reportData }))
-
-    // Upload to Supabase Storage (if configured) or return buffer
-    // For now, we'll store as base64 in the response and update the report
+    // Generate PDF using jsPDF
+    const pdfBuffer = generateReportPDF(reportData)
 
     // Update report status
     await supabase
       .from('reports')
       .update({ 
         status: 'ready',
-        // In production, store PDF URL from storage
-        // pdf_url: uploadedUrl 
       })
       .eq('id', report_id)
 
-    // Convert Buffer to Uint8Array for NextResponse
-    const uint8Array = new Uint8Array(pdfBuffer)
-
     // Return PDF as download
-    return new NextResponse(uint8Array, {
+    return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${report.title.replace(/[^a-z0-9]/gi, '_')}.pdf"`,
