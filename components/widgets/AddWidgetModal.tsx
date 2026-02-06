@@ -75,7 +75,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd, accounts }: Add
   const filteredAccounts = accounts.filter(a => a.platform === selectedPlatform)
 
   // Get metrics for selected account type
-  const getMetrics = () => {
+  const getMetrics = (): { key: string; label: string; category: string }[] => {
     if (!selectedAccount) return []
     const accountType = selectedAccount.platform_account_type
     
@@ -85,7 +85,11 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd, accounts }: Add
       }
       return METRICS.meta.facebook
     }
-    return METRICS[selectedPlatform as keyof typeof METRICS] || []
+    const platformMetrics = METRICS[selectedPlatform as keyof typeof METRICS]
+    if (Array.isArray(platformMetrics)) {
+      return platformMetrics
+    }
+    return []
   }
 
   // Get available widget types for selected metric
