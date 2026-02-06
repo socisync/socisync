@@ -1,39 +1,74 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search } from 'lucide-react'
+import { createClient } from '@/lib/supabase-browser'
 
-export default async function ClientsPage() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
+interface Client {
+  id: string
+  name: string
+  website?: string
+  industry?: string
+  is_active: boolean
+  connected_accounts: { count: number }[]
+}
+
+export default function ClientsPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [clients, setClients] = useState<Client[]>([])
+
+  useEffect(() => {
+    async function loadClients() {
+      const supabase = createClient()
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      // Get user's agency
+      const { data: memberships } = await supabase
+        .from('agency_members')
+        .select('agency_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+
+      if (!memberships || memberships.length === 0) {
+        router.push('/onboarding')
+        return
+      }
+
+      const membership = memberships[0]
+
+      // Get all clients
+      const { data: clientsData } = await supabase
+        .from('clients')
+        .select(`
+          *,
+          connected_accounts(count)
+        `)
+        .eq('agency_id', membership.agency_id)
+        .order('name')
+
+      setClients(clientsData || [])
+      setLoading(false)
+    }
+
+    loadClients()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-slate-500">Loading clients...</div>
+      </div>
+    )
   }
-
-  // Get user's agency (first if multiple)
-  const { data: memberships } = await supabase
-    .from('agency_members')
-    .select('agency_id')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-
-  if (!memberships || memberships.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const membership = memberships[0]
-
-  // Get all clients
-  const { data: clients } = await supabase
-    .from('clients')
-    .select(`
-      *,
-      connected_accounts(count)
-    `)
-    .eq('agency_id', membership.agency_id)
-    .order('name')
 
   return (
     <div>
@@ -41,7 +76,7 @@ export default async function ClientsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
-          <p className="text-slate-500">{clients?.length || 0} total clients</p>
+          <p className="text-slate-500">{clients.length} total clients</p>
         </div>
         <Link 
           href="/dashboard/clients/new"
@@ -52,7 +87,7 @@ export default async function ClientsPage() {
       </div>
 
       {/* Clients Grid */}
-      {clients && clients.length > 0 ? (
+      {clients.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {clients.map((client) => (
             <Link
@@ -80,7 +115,7 @@ export default async function ClientsPage() {
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-sm">
                 <span className="text-slate-500">
-                  {(client.connected_accounts as any)?.[0]?.count || 0} connected accounts
+                  {client.connected_accounts?.[0]?.count || 0} connected accounts
                 </span>
                 <span className={client.is_active ? 'text-green-600' : 'text-slate-400'}>
                   {client.is_active ? 'Active' : 'Inactive'}
