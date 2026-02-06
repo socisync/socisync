@@ -2,80 +2,115 @@ import Link from 'next/link'
 
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#0a0a1f] text-white">
+      {/* Floating Blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[150px]" />
+      </div>
+
       {/* Navigation */}
-      <nav className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-xl font-bold text-slate-900">Socisync</span>
-            </Link>
+      <nav className="relative z-10 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold">socisync</Link>
+            <div className="flex items-center gap-6">
+              <Link href="/login" className="text-gray-400 hover:text-white transition">Login</Link>
+              <Link href="/signup" className="bg-violet-600 text-white px-5 py-2.5 rounded-full hover:bg-violet-700 transition">
+                Get Started
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8">Terms of Service</h1>
+      <div className="relative z-10 max-w-3xl mx-auto px-6 py-16">
+        <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
+        <p className="text-gray-500 mb-12">Last Updated: February 2026</p>
         
-        <div className="prose prose-slate max-w-none">
-          <p className="text-slate-500 mb-8">Last Updated: February 2026</p>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-xl font-semibold mb-4">1. Acceptance of Terms</h2>
+            <p className="text-gray-400">
+              By accessing or using Socisync, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">1. Agreement to Terms</h2>
-          <p className="text-slate-600 mb-4">
-            By accessing or using Socisync (&quot;Service&quot;), you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">2. Description of Service</h2>
+            <p className="text-gray-400">
+              Socisync provides a social media analytics and reporting platform for marketing agencies. Our service allows you to connect client social media accounts, view analytics, and generate reports.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">2. Description of Service</h2>
-          <p className="text-slate-600 mb-4">
-            Socisync is a social media management and reporting platform that allows digital marketing agencies to connect and monitor client social media accounts, view analytics, and generate reports.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">3. User Accounts</h2>
+            <p className="text-gray-400">
+              You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">3. Account Registration</h2>
-          <p className="text-slate-600 mb-4">
-            To use Socisync, you must register for an account with accurate information, be at least 18 years old, and be authorised to act on behalf of your agency/company.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">4. Acceptable Use</h2>
+            <p className="text-gray-400 mb-3">You agree not to:</p>
+            <ul className="list-disc list-inside text-gray-400 space-y-2">
+              <li>Use the service for any unlawful purpose</li>
+              <li>Attempt to gain unauthorized access to our systems</li>
+              <li>Interfere with or disrupt the service</li>
+              <li>Violate any third-party platform terms of service</li>
+            </ul>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">4. Subscription and Payment</h2>
-          <p className="text-slate-600 mb-4">
-            Subscription fees are based on your selected plan. Subscriptions are billed monthly or annually in advance. You may cancel your subscription at any time.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">5. Intellectual Property</h2>
+            <p className="text-gray-400">
+              The Socisync platform, including its original content, features, and functionality, is owned by Socisync and is protected by international copyright, trademark, and other intellectual property laws.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">5. Acceptable Use</h2>
-          <p className="text-slate-600 mb-4">
-            You agree not to use the Service for any illegal purpose, violate any third-party platform&apos;s terms of service, or access accounts you are not authorised to manage.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">6. Subscription and Payment</h2>
+            <p className="text-gray-400">
+              Paid subscriptions are billed monthly or annually. You may cancel your subscription at any time. Refunds are provided in accordance with our refund policy.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">6. Third-Party Integrations</h2>
-          <p className="text-slate-600 mb-4">
-            Socisync integrates with Meta, LinkedIn, YouTube, and TikTok. Your use of these integrations is subject to each platform&apos;s Terms of Service.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">7. Limitation of Liability</h2>
+            <p className="text-gray-400">
+              Socisync shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">7. Intellectual Property</h2>
-          <p className="text-slate-600 mb-4">
-            The Service, including its design, features, and content, is owned by Socisync and protected by intellectual property laws.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">8. Changes to Terms</h2>
+            <p className="text-gray-400">
+              We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the platform.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">8. Limitation of Liability</h2>
-          <p className="text-slate-600 mb-4">
-            The Service is provided &quot;as is&quot; without warranties. We are not liable for indirect, incidental, or consequential damages.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">9. Governing Law</h2>
-          <p className="text-slate-600 mb-4">
-            These Terms are governed by the laws of England and Wales.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">10. Contact</h2>
-          <p className="text-slate-600 mb-4">
-            For questions about these Terms, contact us at:<br />
-            Email: legal@socisync.com
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">9. Contact</h2>
+            <p className="text-gray-400">
+              If you have questions about these Terms, please contact us at legal@socisync.com.
+            </p>
+          </section>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 py-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <span className="text-xl font-bold">socisync</span>
+            <div className="flex gap-6 text-sm text-gray-400">
+              <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
+              <Link href="/" className="hover:text-white transition">Home</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

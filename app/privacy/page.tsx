@@ -2,68 +2,100 @@ import Link from 'next/link'
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#0a0a1f] text-white">
+      {/* Floating Blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-violet-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[150px]" />
+      </div>
+
       {/* Navigation */}
-      <nav className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-xl font-bold text-slate-900">Socisync</span>
-            </Link>
+      <nav className="relative z-10 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold">socisync</Link>
+            <div className="flex items-center gap-6">
+              <Link href="/login" className="text-gray-400 hover:text-white transition">Login</Link>
+              <Link href="/signup" className="bg-violet-600 text-white px-5 py-2.5 rounded-full hover:bg-violet-700 transition">
+                Get Started
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8">Privacy Policy</h1>
+      <div className="relative z-10 max-w-3xl mx-auto px-6 py-16">
+        <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
+        <p className="text-gray-500 mb-12">Last Updated: February 2026</p>
         
-        <div className="prose prose-slate max-w-none">
-          <p className="text-slate-500 mb-8">Last Updated: February 2026</p>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-xl font-semibold mb-4">1. Introduction</h2>
+            <p className="text-gray-400">
+              Socisync (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) operates the Socisync platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">1. Introduction</h2>
-          <p className="text-slate-600 mb-4">
-            Socisync (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) operates the Socisync platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">2. Information We Collect</h2>
+            <p className="text-gray-400 mb-3">
+              <strong className="text-white">Account Information:</strong> Name, email address, company/agency name, and billing information.
+            </p>
+            <p className="text-gray-400">
+              <strong className="text-white">Connected Social Media Accounts:</strong> When you connect social media accounts, we access page insights, post data, and ad performance metrics as necessary to provide our reporting services.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">2. Information We Collect</h2>
-          <p className="text-slate-600 mb-4">
-            <strong>Account Information:</strong> Name, email address, company/agency name, and billing information.
-          </p>
-          <p className="text-slate-600 mb-4">
-            <strong>Connected Social Media Accounts:</strong> When you connect social media accounts, we access page insights, post data, and ad performance metrics as necessary to provide our reporting services.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">3. How We Use Your Information</h2>
+            <p className="text-gray-400">
+              We use the information we collect to provide and maintain our service, generate social media reports and analytics, process transactions, and improve our platform.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">3. How We Use Your Information</h2>
-          <p className="text-slate-600 mb-4">
-            We use the information we collect to provide and maintain our service, generate social media reports and analytics, process transactions, and improve our platform.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">4. Data Sharing</h2>
+            <p className="text-gray-400">
+              We do not sell your personal information or your clients&apos; data. We may share information with service providers who assist in operating our platform.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">4. Data Sharing</h2>
-          <p className="text-slate-600 mb-4">
-            We do not sell your personal information or your clients&apos; data. We may share information with service providers who assist in operating our platform.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">5. Data Security</h2>
+            <p className="text-gray-400">
+              We use industry-standard encryption and security measures to protect your data. Access to your connected social media accounts is secured via OAuth and we never store your social media passwords.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">5. Data Security</h2>
-          <p className="text-slate-600 mb-4">
-            We implement appropriate technical and organisational measures to protect your data, including encryption of data in transit and at rest.
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">6. Your Rights</h2>
+            <p className="text-gray-400">
+              You may access, update, or delete your account information at any time. You can disconnect any connected social media accounts through your dashboard.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">6. Your Rights</h2>
-          <p className="text-slate-600 mb-4">
-            You have the right to access, correct, or delete your personal data. Contact us at privacy@socisync.com to exercise these rights.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">7. Contact Us</h2>
-          <p className="text-slate-600 mb-4">
-            If you have questions about this Privacy Policy, contact us at:<br />
-            Email: privacy@socisync.com
-          </p>
+          <section>
+            <h2 className="text-xl font-semibold mb-4">7. Contact</h2>
+            <p className="text-gray-400">
+              If you have questions about this Privacy Policy, please contact us at privacy@socisync.com.
+            </p>
+          </section>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 py-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <span className="text-xl font-bold">socisync</span>
+            <div className="flex gap-6 text-sm text-gray-400">
+              <Link href="/terms" className="hover:text-white transition">Terms</Link>
+              <Link href="/" className="hover:text-white transition">Home</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
