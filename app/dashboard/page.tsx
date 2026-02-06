@@ -1,56 +1,96 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Users, BarChart3, FileText, Plus } from 'lucide-react'
+import { createClient } from '@/lib/supabase-browser'
 
-export default async function Dashboard() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
+interface Agency {
+  id: string
+  name: string
+}
+
+interface Client {
+  id: string
+  name: string
+  website: string | null
+  created_at: string
+}
+
+export default function Dashboard() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [agency, setAgency] = useState<Agency | null>(null)
+  const [clients, setClients] = useState<Client[]>([])
+  const [clientsCount, setClientsCount] = useState(0)
+  const [accountsCount, setAccountsCount] = useState(0)
+
+  useEffect(() => {
+    async function loadData() {
+      const supabase = createClient()
+      
+      // Check auth
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      // Get membership
+      const { data: membership } = await supabase
+        .from('agency_members')
+        .select('agency_id, role, agencies(*)')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+
+      if (!membership) {
+        router.push('/onboarding')
+        return
+      }
+
+      const agencyData = membership.agencies as any
+      setAgency(agencyData)
+
+      // Get clients
+      const { data: clientsData, count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact' })
+        .eq('agency_id', agencyData.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      setClients(clientsData || [])
+      setClientsCount(count || 0)
+
+      // Get accounts count
+      const { count: acctCount } = await supabase
+        .from('connected_accounts')
+        .select('*, clients!inner(agency_id)', { count: 'exact', head: true })
+        .eq('clients.agency_id', agencyData.id)
+
+      setAccountsCount(acctCount || 0)
+      setLoading(false)
+    }
+
+    loadData()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    )
   }
-
-  // Get user's agency
-  const { data: membership } = await supabase
-    .from('agency_members')
-    .select('agency_id, role, agencies(*)')
-    .eq('user_id', user.id)
-    .single()
-
-  // No agency? Send to onboarding
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const agency = membership.agencies as any
-
-  // Get clients count
-  const { count: clientsCount } = await supabase
-    .from('clients')
-    .select('*', { count: 'exact', head: true })
-    .eq('agency_id', agency.id)
-
-  // Get connected accounts count
-  const { count: accountsCount } = await supabase
-    .from('connected_accounts')
-    .select('*, clients!inner(agency_id)', { count: 'exact', head: true })
-    .eq('clients.agency_id', agency.id)
-
-  // Get recent clients
-  const { data: recentClients } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('agency_id', agency.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
 
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Welcome back!</h1>
-        <p className="text-slate-500">{agency.name}</p>
+        <p className="text-slate-500">{agency?.name}</p>
       </div>
 
       {/* Stats */}
@@ -58,12 +98,12 @@ export default async function Dashboard() {
         <StatCard 
           icon={<Users className="w-6 h-6" />}
           label="Total Clients"
-          value={clientsCount || 0}
+          value={clientsCount}
         />
         <StatCard 
           icon={<BarChart3 className="w-6 h-6" />}
           label="Connected Accounts"
-          value={accountsCount || 0}
+          value={accountsCount}
         />
         <StatCard 
           icon={<FileText className="w-6 h-6" />}
@@ -84,13 +124,13 @@ export default async function Dashboard() {
           </Link>
         </div>
         
-        {recentClients && recentClients.length > 0 ? (
+        {clients.length > 0 ? (
           <div className="divide-y divide-slate-200">
-            {recentClients.map((client) => (
+            {clients.map((client) => (
               <Link 
                 key={client.id}
                 href={`/dashboard/clients/${client.id}`}
-                className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition"
+                className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition block"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">

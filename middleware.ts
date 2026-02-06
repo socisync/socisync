@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Just refresh the session, don't redirect
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -27,21 +28,14 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Only protect /dashboard and /onboarding routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname === '/onboarding') {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-  }
+  // Just refresh the session - don't redirect
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
