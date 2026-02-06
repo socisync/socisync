@@ -51,7 +51,7 @@ export default function PieChartWidget({ title, data, size }: PieChartWidgetProp
                 borderRadius: '8px',
                 fontSize: '12px'
               }}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
+              formatter={(value, name) => [formatNumber(value as number), name as string]}
             />
             <Legend 
               layout="vertical"

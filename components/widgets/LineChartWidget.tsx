@@ -64,7 +64,7 @@ export default function LineChartWidget({ title, data, size, color = '#3b82f6' }
                 borderRadius: '8px',
                 fontSize: '12px'
               }}
-              formatter={(value: number) => [formatNumber(value), title]}
+              formatter={(value) => [formatNumber(value as number), title]}
             />
             <Line 
               type="monotone" 
