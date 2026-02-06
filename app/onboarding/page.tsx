@@ -33,7 +33,7 @@ export default function Onboarding() {
       .replace(/^-|-$/g, '')
 
     // Create agency
-    const { error: insertError } = await supabase
+    const { data: agency, error: insertError } = await supabase
       .from('agencies')
       .insert({
         name: agencyName,
@@ -41,6 +41,8 @@ export default function Onboarding() {
         owner_id: user.id,
         website: website || null,
       })
+      .select()
+      .single()
 
     if (insertError) {
       if (insertError.code === '23505') {
@@ -48,6 +50,21 @@ export default function Onboarding() {
       } else {
         setError(insertError.message)
       }
+      setLoading(false)
+      return
+    }
+
+    // Add user as agency member (owner)
+    const { error: memberError } = await supabase
+      .from('agency_members')
+      .insert({
+        agency_id: agency.id,
+        user_id: user.id,
+        role: 'owner',
+      })
+
+    if (memberError) {
+      setError('Agency created but failed to add membership: ' + memberError.message)
       setLoading(false)
       return
     }
