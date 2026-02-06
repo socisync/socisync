@@ -129,6 +129,8 @@ export default function ClientDetailPage() {
         endpoint = `/api/insights/linkedin?account_id=${accountId}`
       } else if (platform === 'youtube') {
         endpoint = `/api/insights/youtube?account_id=${accountId}`
+      } else if (platform === 'tiktok') {
+        endpoint = `/api/insights/tiktok?account_id=${accountId}`
       }
       
       const res = await fetch(endpoint)
@@ -181,6 +183,20 @@ export default function ClientDetailPage() {
     const state = clientId
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`
+    
+    window.location.href = authUrl
+  }
+
+  const connectTikTok = () => {
+    const tiktokAppId = process.env.NEXT_PUBLIC_TIKTOK_APP_ID
+    if (!tiktokAppId) {
+      alert('TikTok integration not configured yet')
+      return
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/tiktok`)
+    const state = clientId
+    
+    const authUrl = `https://business-api.tiktok.com/portal/auth?app_id=${tiktokAppId}&redirect_uri=${redirectUri}&state=${state}`
     
     window.location.href = authUrl
   }
@@ -300,6 +316,18 @@ export default function ClientDetailPage() {
                     <div>
                       <div className="font-medium text-slate-900">YouTube</div>
                       <div className="text-xs text-slate-500">Channels & analytics</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={connectTikTok}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+                      <Music2 className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">TikTok Ads</div>
+                      <div className="text-xs text-slate-500">Ad account reporting</div>
                     </div>
                   </button>
                 </div>
