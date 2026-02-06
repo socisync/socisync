@@ -69,7 +69,7 @@ export default function AddWidgetModal({ isOpen, onClose, onAdd, accounts }: Add
   }
 
   // Get unique platforms from connected accounts
-  const availablePlatforms = [...new Set(accounts.map(a => a.platform))]
+  const availablePlatforms = Array.from(new Set(accounts.map(a => a.platform)))
 
   // Get accounts for selected platform
   const filteredAccounts = accounts.filter(a => a.platform === selectedPlatform)

@@ -210,7 +210,7 @@ export default function ClientDetailPage() {
     : widgets
 
   // Get unique platforms from accounts
-  const platforms = [...new Set(accounts.map(a => a.platform))]
+  const platforms = Array.from(new Set(accounts.map(a => a.platform)))
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="text-slate-500">Loading...</div></div>
