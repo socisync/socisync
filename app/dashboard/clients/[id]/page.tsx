@@ -104,7 +104,7 @@ export default function ClientDetailPage() {
       // Auto-fetch insights for connected accounts
       if (accountsData && accountsData.length > 0) {
         for (const account of accountsData) {
-          fetchInsights(account.id)
+          fetchInsights(account.id, account.platform)
         }
       }
     }
@@ -120,11 +120,15 @@ export default function ClientDetailPage() {
     }
   }, [successMessage])
 
-  const fetchInsights = async (accountId: string) => {
+  const fetchInsights = async (accountId: string, platform: string) => {
     setLoadingInsights(prev => ({ ...prev, [accountId]: true }))
     
     try {
-      const res = await fetch(`/api/insights/meta?account_id=${accountId}`)
+      const endpoint = platform === 'linkedin' 
+        ? `/api/insights/linkedin?account_id=${accountId}`
+        : `/api/insights/meta?account_id=${accountId}`
+      
+      const res = await fetch(endpoint)
       const data = await res.json()
       
       if (data.insights) {
@@ -144,6 +148,21 @@ export default function ClientDetailPage() {
     const state = clientId
     
     const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&response_type=code`
+    
+    window.location.href = authUrl
+  }
+
+  const connectLinkedIn = () => {
+    const clientIdEnv = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID
+    if (!clientIdEnv) {
+      alert('LinkedIn integration not configured yet')
+      return
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/linkedin`)
+    const scope = encodeURIComponent('r_organization_admin rw_organization_admin r_organization_social')
+    const state = clientId
+    
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientIdEnv}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`
     
     window.location.href = authUrl
   }
@@ -242,15 +261,15 @@ export default function ClientDetailPage() {
                     </div>
                   </button>
                   <button
-                    disabled
-                    className="w-full px-4 py-2 text-left flex items-center gap-3 opacity-50 cursor-not-allowed"
+                    onClick={connectLinkedIn}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
                   >
                     <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
                       <Linkedin className="w-4 h-4 text-sky-600" />
                     </div>
                     <div>
                       <div className="font-medium text-slate-900">LinkedIn</div>
-                      <div className="text-xs text-slate-500">Coming soon</div>
+                      <div className="text-xs text-slate-500">Company pages</div>
                     </div>
                   </button>
                   <button
@@ -297,7 +316,7 @@ export default function ClientDetailPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => fetchInsights(account.id)}
+                      onClick={() => fetchInsights(account.id, account.platform)}
                       disabled={isLoadingInsights}
                       className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
                     >
