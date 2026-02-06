@@ -1,4 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
+
+// Force Node.js runtime (react-pdf doesn't work on Edge)
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 import { renderToBuffer } from '@react-pdf/renderer'
 import { createClient } from '@supabase/supabase-js'
 import { ReportDocument, type ReportData } from '@/lib/pdf/report-template'
