@@ -36,7 +36,7 @@
 | Settings page | HIGH | Medium |
 | LinkedIn OAuth | MEDIUM | Medium |
 | YouTube OAuth | MEDIUM | Medium |
-| TikTok OAuth | LOW | Medium |
+| TikTok Ads OAuth | MEDIUM | Medium |
 | Team members | MEDIUM | Medium |
 | Billing/Stripe | HIGH | High |
 | Email notifications | LOW | Low |
@@ -140,7 +140,22 @@
 
 ---
 
-### CHUNK 7: Background Jobs & Sync
+### CHUNK 7: TikTok Ads Integration
+**Files to create:**
+- `/auth/callback/tiktok/route.ts`
+- `/dashboard/connect/tiktok/select/page.tsx`
+- `/api/insights/tiktok/route.ts`
+- `/lib/tiktok-api.ts`
+
+**Features:**
+- Marketing API OAuth
+- Ad account selection
+- Campaign performance metrics
+- Spend & conversion data
+
+---
+
+### CHUNK 8: Background Jobs & Sync
 **Files to create:**
 - `/api/cron/sync-metrics/route.ts`
 - `/lib/sync-manager.ts`

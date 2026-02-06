@@ -1,0 +1,220 @@
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+
+// Styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  metricCard: {
+    width: '48%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: '#64748b',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  metricValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  metricChange: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  positive: {
+    color: '#16a34a',
+  },
+  negative: {
+    color: '#dc2626',
+  },
+  platformSection: {
+    marginBottom: 20,
+  },
+  platformHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  platformIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+    backgroundColor: '#3b82f6',
+    borderRadius: 4,
+  },
+  platformName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 40,
+    right: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 12,
+  },
+  footerText: {
+    fontSize: 9,
+    color: '#94a3b8',
+  },
+  summaryText: {
+    fontSize: 11,
+    color: '#475569',
+    lineHeight: 1.6,
+    marginBottom: 12,
+  },
+  highlightBox: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+  },
+  highlightTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1e40af',
+    marginBottom: 8,
+  },
+  highlightText: {
+    fontSize: 11,
+    color: '#1e40af',
+    lineHeight: 1.5,
+  },
+})
+
+// Interfaces
+export interface ReportMetric {
+  label: string
+  value: number | string
+  change?: number
+  platform?: string
+}
+
+export interface ReportData {
+  title: string
+  clientName: string
+  agencyName: string
+  dateRange: string
+  generatedAt: string
+  metrics: ReportMetric[]
+  summary?: string
+  highlights?: string[]
+}
+
+// Helper function to format numbers
+function formatNumber(num: number): string {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+  return num.toLocaleString()
+}
+
+// Report Document Component
+export function ReportDocument({ data }: { data: ReportData }) {
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{data.title}</Text>
+          <Text style={styles.subtitle}>
+            {data.clientName} • {data.dateRange}
+          </Text>
+        </View>
+
+        {/* Executive Summary */}
+        {data.summary && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Executive Summary</Text>
+            <Text style={styles.summaryText}>{data.summary}</Text>
+          </View>
+        )}
+
+        {/* Key Highlights */}
+        {data.highlights && data.highlights.length > 0 && (
+          <View style={styles.highlightBox}>
+            <Text style={styles.highlightTitle}>Key Highlights</Text>
+            {data.highlights.map((highlight, i) => (
+              <Text key={i} style={styles.highlightText}>• {highlight}</Text>
+            ))}
+          </View>
+        )}
+
+        {/* Metrics Grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Performance Metrics</Text>
+          <View style={styles.metricsGrid}>
+            {data.metrics.map((metric, i) => (
+              <View key={i} style={styles.metricCard}>
+                <Text style={styles.metricLabel}>{metric.label}</Text>
+                <Text style={styles.metricValue}>
+                  {typeof metric.value === 'number' ? formatNumber(metric.value) : metric.value}
+                </Text>
+                {metric.change !== undefined && (
+                  <Text style={[
+                    styles.metricChange,
+                    metric.change >= 0 ? styles.positive : styles.negative
+                  ]}>
+                    {metric.change >= 0 ? '↑' : '↓'} {Math.abs(metric.change).toFixed(1)}% vs previous period
+                  </Text>
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Generated by {data.agencyName} via Socisync
+          </Text>
+          <Text style={styles.footerText}>
+            {data.generatedAt}
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  )
+}

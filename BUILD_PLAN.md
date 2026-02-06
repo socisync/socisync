@@ -101,7 +101,23 @@ Social media management & reporting platform for digital marketing agencies.
 
 ---
 
-## Phase 6: Polish & Launch
+## Phase 6: TikTok Ads Integration
+**Status:** Not Started (Research in progress)
+
+### 6.1 OAuth
+- [ ] TikTok Business Center setup
+- [ ] Marketing API app registration
+- [ ] OAuth flow implementation
+
+### 6.2 Ads Metrics
+- [ ] Campaign performance (impressions, clicks, CTR)
+- [ ] Spend and budget data
+- [ ] Conversion tracking
+- [ ] Audience insights
+
+---
+
+## Phase 7: Polish & Launch
 **Status:** Not Started
 
 - [ ] Error handling & edge cases
