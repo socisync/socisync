@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Facebook, Linkedin, Youtube, Music2, RefreshCw, Users, Eye, ThumbsUp, TrendingUp, Pencil } from 'lucide-react'
+import { 
+  ArrowLeft, Plus, Facebook, Instagram, Linkedin, Youtube, Music2, RefreshCw, 
+  Users, Eye, ThumbsUp, TrendingUp, Pencil, MessageCircle, Share2, Bookmark,
+  MousePointer, Heart, Play, UserPlus, Globe, Mail, Phone, MapPin, BarChart3
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 
 interface Client {
@@ -25,16 +29,49 @@ interface ConnectedAccount {
   last_synced_at: string | null
 }
 
-interface Insights {
-  followers?: number
-  pageViews?: number
-  profileViews?: number
-  postReach?: number
-  reach?: number
-  postEngagement?: number
-  impressions?: number
-  period?: string
+interface FacebookInsights {
+  followers: number
+  pageLikes: number
+  pageViews: number
+  reach: number
+  impressions: number
+  postReach: number
+  postImpressions: number
+  engagements: number
+  engagedUsers: number
+  reactions: number
+  clicks: number
+  videoViews: number
+  newLikes: number
+  unlikes: number
+  newFollowers: number
+  negativeActions: number
+  period: string
 }
+
+interface InstagramInsights {
+  followers: number
+  following: number
+  mediaCount: number
+  reach: number
+  impressions: number
+  profileViews: number
+  accountsEngaged: number
+  totalInteractions: number
+  likes: number
+  comments: number
+  shares: number
+  saves: number
+  replies: number
+  websiteClicks: number
+  emailContacts: number
+  phoneClicks: number
+  getDirectionsClicks: number
+  followerCount: number
+  period: string
+}
+
+type Insights = FacebookInsights | InstagramInsights
 
 const platformIcons: Record<string, any> = {
   meta: Facebook,
@@ -60,7 +97,7 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [client, setClient] = useState<Client | null>(null)
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
-  const [insights, setInsights] = useState<Record<string, Insights>>({})
+  const [insights, setInsights] = useState<Record<string, { insights: Insights, account_type: string }>>({})
   const [loadingInsights, setLoadingInsights] = useState<Record<string, boolean>>({})
   const [showConnectMenu, setShowConnectMenu] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(
@@ -77,7 +114,6 @@ export default function ClientDetailPage() {
         return
       }
 
-      // Get client
       const { data: clientData } = await supabase
         .from('clients')
         .select('*')
@@ -91,7 +127,6 @@ export default function ClientDetailPage() {
 
       setClient(clientData)
 
-      // Get connected accounts
       const { data: accountsData } = await supabase
         .from('connected_accounts')
         .select('*')
@@ -101,7 +136,6 @@ export default function ClientDetailPage() {
       setAccounts(accountsData || [])
       setLoading(false)
 
-      // Auto-fetch insights for connected accounts
       if (accountsData && accountsData.length > 0) {
         for (const account of accountsData) {
           fetchInsights(account.id, account.platform)
@@ -112,7 +146,6 @@ export default function ClientDetailPage() {
     loadData()
   }, [clientId, router])
 
-  // Clear success message after 5 seconds
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 5000)
@@ -124,7 +157,7 @@ export default function ClientDetailPage() {
     setLoadingInsights(prev => ({ ...prev, [accountId]: true }))
     
     try {
-      let endpoint = `/api/insights/meta?account_id=${accountId}`
+      let endpoint = `/api/insights/meta?account_id=${accountId}&include=all`
       if (platform === 'linkedin') {
         endpoint = `/api/insights/linkedin?account_id=${accountId}`
       } else if (platform === 'youtube') {
@@ -137,7 +170,7 @@ export default function ClientDetailPage() {
       const data = await res.json()
       
       if (data.insights) {
-        setInsights(prev => ({ ...prev, [accountId]: data.insights }))
+        setInsights(prev => ({ ...prev, [accountId]: data }))
       }
     } catch (err) {
       console.error('Failed to fetch insights:', err)
@@ -149,7 +182,7 @@ export default function ClientDetailPage() {
   const connectMeta = () => {
     const appId = process.env.NEXT_PUBLIC_META_APP_ID || '912349961253093'
     const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/meta`)
-    const scope = encodeURIComponent('pages_show_list,pages_read_engagement,pages_read_user_content,read_insights,instagram_basic,instagram_manage_insights')
+    const scope = encodeURIComponent('pages_show_list,pages_read_engagement,pages_read_user_content,read_insights,instagram_basic,instagram_manage_insights,business_management')
     const state = clientId
     
     const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&response_type=code`
@@ -211,14 +244,12 @@ export default function ClientDetailPage() {
 
   return (
     <div>
-      {/* Success Message */}
       {successMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
           ✓ {successMessage}
         </div>
       )}
 
-      {/* Back link */}
       <Link 
         href="/dashboard/clients"
         className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
@@ -266,7 +297,7 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      {/* Connected Accounts with Insights */}
+      {/* Connected Accounts */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
           <h2 className="font-semibold text-slate-900">Connected Accounts</h2>
@@ -282,10 +313,7 @@ export default function ClientDetailPage() {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowConnectMenu(false)} />
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-20">
-                  <button
-                    onClick={connectMeta}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
-                  >
+                  <button onClick={connectMeta} className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                       <Facebook className="w-4 h-4 text-blue-600" />
                     </div>
@@ -294,10 +322,7 @@ export default function ClientDetailPage() {
                       <div className="text-xs text-slate-500">Pages & Business accounts</div>
                     </div>
                   </button>
-                  <button
-                    onClick={connectLinkedIn}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
-                  >
+                  <button onClick={connectLinkedIn} className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3">
                     <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
                       <Linkedin className="w-4 h-4 text-sky-600" />
                     </div>
@@ -306,10 +331,7 @@ export default function ClientDetailPage() {
                       <div className="text-xs text-slate-500">Company pages</div>
                     </div>
                   </button>
-                  <button
-                    onClick={connectYouTube}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
-                  >
+                  <button onClick={connectYouTube} className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3">
                     <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                       <Youtube className="w-4 h-4 text-red-600" />
                     </div>
@@ -318,10 +340,7 @@ export default function ClientDetailPage() {
                       <div className="text-xs text-slate-500">Channels & analytics</div>
                     </div>
                   </button>
-                  <button
-                    onClick={connectTikTok}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
-                  >
+                  <button onClick={connectTikTok} className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3">
                     <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
                       <Music2 className="w-4 h-4 text-white" />
                     </div>
@@ -339,9 +358,9 @@ export default function ClientDetailPage() {
         {accounts.length > 0 ? (
           <div className="divide-y divide-slate-200">
             {accounts.map((account) => {
-              const Icon = platformIcons[account.platform] || Facebook
-              const colorClass = platformColors[account.platform] || 'bg-slate-100 text-slate-600'
-              const accountInsights = insights[account.id]
+              const Icon = account.platform_account_type === 'instagram_business' ? Instagram : platformIcons[account.platform] || Facebook
+              const colorClass = account.platform_account_type === 'instagram_business' ? 'bg-pink-100 text-pink-600' : platformColors[account.platform] || 'bg-slate-100 text-slate-600'
+              const accountData = insights[account.id]
               const isLoadingInsights = loadingInsights[account.id]
               
               return (
@@ -371,34 +390,17 @@ export default function ClientDetailPage() {
                     </button>
                   </div>
 
-                  {/* Insights Grid */}
-                  {accountInsights ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <InsightCard
-                        icon={<Users className="w-5 h-5" />}
-                        label="Followers"
-                        value={accountInsights.followers || 0}
-                      />
-                      <InsightCard
-                        icon={<Eye className="w-5 h-5" />}
-                        label={account.platform_account_type === 'instagram_business' ? 'Profile Views' : 'Page Views'}
-                        value={accountInsights.profileViews || accountInsights.pageViews || 0}
-                      />
-                      <InsightCard
-                        icon={<TrendingUp className="w-5 h-5" />}
-                        label="Reach"
-                        value={accountInsights.reach || accountInsights.postReach || 0}
-                      />
-                      <InsightCard
-                        icon={<ThumbsUp className="w-5 h-5" />}
-                        label={account.platform_account_type === 'instagram_business' ? 'Impressions' : 'Engagement'}
-                        value={accountInsights.impressions || accountInsights.postEngagement || 0}
-                      />
-                    </div>
+                  {/* Insights */}
+                  {accountData?.insights ? (
+                    account.platform_account_type === 'instagram_business' ? (
+                      <InstagramInsightsGrid insights={accountData.insights as InstagramInsights} />
+                    ) : (
+                      <FacebookInsightsGrid insights={accountData.insights as FacebookInsights} />
+                    )
                   ) : isLoadingInsights ? (
-                    <div className="text-center py-4 text-slate-400">Loading insights...</div>
+                    <div className="text-center py-8 text-slate-400">Loading insights...</div>
                   ) : (
-                    <div className="text-center py-4 text-slate-400">Click refresh to load insights</div>
+                    <div className="text-center py-8 text-slate-400">Click refresh to load insights</div>
                   )}
                 </div>
               )
@@ -410,11 +412,11 @@ export default function ClientDetailPage() {
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Facebook className="w-5 h-5 text-blue-600" />
               </div>
+              <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <Instagram className="w-5 h-5 text-pink-600" />
+              </div>
               <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
                 <Linkedin className="w-5 h-5 text-sky-600" />
-              </div>
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <Youtube className="w-5 h-5 text-red-600" />
               </div>
             </div>
             <h3 className="font-medium text-slate-900 mb-1">No accounts connected</h3>
@@ -434,20 +436,162 @@ export default function ClientDetailPage() {
   )
 }
 
-function InsightCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: number }) {
+function FacebookInsightsGrid({ insights }: { insights: FacebookInsights }) {
+  return (
+    <div className="space-y-6">
+      {/* Audience */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Users className="w-4 h-4" /> Audience
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Followers" value={insights.followers} icon={<Users className="w-4 h-4" />} />
+          <MetricCard label="Page Likes" value={insights.pageLikes} icon={<ThumbsUp className="w-4 h-4" />} />
+          <MetricCard label="New Likes" value={insights.newLikes} icon={<UserPlus className="w-4 h-4" />} color="green" />
+          <MetricCard label="New Followers" value={insights.newFollowers} icon={<UserPlus className="w-4 h-4" />} color="green" />
+        </div>
+      </div>
+
+      {/* Reach & Impressions */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Eye className="w-4 h-4" /> Reach & Visibility
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Page Views" value={insights.pageViews} icon={<Eye className="w-4 h-4" />} />
+          <MetricCard label="Reach" value={insights.reach} icon={<TrendingUp className="w-4 h-4" />} />
+          <MetricCard label="Impressions" value={insights.impressions} icon={<BarChart3 className="w-4 h-4" />} />
+          <MetricCard label="Post Reach" value={insights.postReach} icon={<TrendingUp className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {/* Engagement */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Heart className="w-4 h-4" /> Engagement
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Engagements" value={insights.engagements} icon={<Heart className="w-4 h-4" />} />
+          <MetricCard label="Engaged Users" value={insights.engagedUsers} icon={<Users className="w-4 h-4" />} />
+          <MetricCard label="Reactions" value={insights.reactions} icon={<ThumbsUp className="w-4 h-4" />} />
+          <MetricCard label="Clicks" value={insights.clicks} icon={<MousePointer className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {/* Video & Other */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Play className="w-4 h-4" /> Video & Other
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Video Views" value={insights.videoViews} icon={<Play className="w-4 h-4" />} />
+          <MetricCard label="Post Impressions" value={insights.postImpressions} icon={<BarChart3 className="w-4 h-4" />} />
+          <MetricCard label="Unlikes" value={insights.unlikes} icon={<ThumbsUp className="w-4 h-4" />} color="red" />
+          <MetricCard label="Negative Actions" value={insights.negativeActions} icon={<ThumbsUp className="w-4 h-4" />} color="red" />
+        </div>
+      </div>
+
+      {insights.period && (
+        <p className="text-xs text-slate-400 text-right">Period: {insights.period}</p>
+      )}
+    </div>
+  )
+}
+
+function InstagramInsightsGrid({ insights }: { insights: InstagramInsights }) {
+  return (
+    <div className="space-y-6">
+      {/* Audience */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Users className="w-4 h-4" /> Audience
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Followers" value={insights.followers} icon={<Users className="w-4 h-4" />} />
+          <MetricCard label="Following" value={insights.following} icon={<Users className="w-4 h-4" />} />
+          <MetricCard label="Posts" value={insights.mediaCount} icon={<BarChart3 className="w-4 h-4" />} />
+          <MetricCard label="Profile Views" value={insights.profileViews} icon={<Eye className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {/* Reach & Impressions */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Eye className="w-4 h-4" /> Reach & Visibility
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Reach" value={insights.reach} icon={<TrendingUp className="w-4 h-4" />} />
+          <MetricCard label="Impressions" value={insights.impressions} icon={<BarChart3 className="w-4 h-4" />} />
+          <MetricCard label="Accounts Engaged" value={insights.accountsEngaged} icon={<Users className="w-4 h-4" />} />
+          <MetricCard label="Total Interactions" value={insights.totalInteractions} icon={<Heart className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {/* Engagement */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <Heart className="w-4 h-4" /> Engagement
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Likes" value={insights.likes} icon={<Heart className="w-4 h-4" />} />
+          <MetricCard label="Comments" value={insights.comments} icon={<MessageCircle className="w-4 h-4" />} />
+          <MetricCard label="Shares" value={insights.shares} icon={<Share2 className="w-4 h-4" />} />
+          <MetricCard label="Saves" value={insights.saves} icon={<Bookmark className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div>
+        <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <MousePointer className="w-4 h-4" /> Profile Actions
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Website Clicks" value={insights.websiteClicks} icon={<Globe className="w-4 h-4" />} />
+          <MetricCard label="Email Contacts" value={insights.emailContacts} icon={<Mail className="w-4 h-4" />} />
+          <MetricCard label="Phone Clicks" value={insights.phoneClicks} icon={<Phone className="w-4 h-4" />} />
+          <MetricCard label="Directions" value={insights.getDirectionsClicks} icon={<MapPin className="w-4 h-4" />} />
+        </div>
+      </div>
+
+      {insights.period && (
+        <p className="text-xs text-slate-400 text-right">Period: {insights.period}</p>
+      )}
+    </div>
+  )
+}
+
+function MetricCard({ 
+  label, 
+  value, 
+  icon, 
+  color = 'default' 
+}: { 
+  label: string
+  value: number
+  icon: React.ReactNode
+  color?: 'default' | 'green' | 'red'
+}) {
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
     return num.toLocaleString()
   }
 
+  const colorClasses = {
+    default: 'text-slate-500',
+    green: 'text-green-600',
+    red: 'text-red-500',
+  }
+
   return (
-    <div className="bg-slate-50 rounded-lg p-4">
-      <div className="flex items-center gap-2 text-slate-500 mb-1">
+    <div className="bg-slate-50 rounded-lg p-3">
+      <div className={`flex items-center gap-1.5 mb-1 ${colorClasses[color]}`}>
         {icon}
         <span className="text-xs">{label}</span>
       </div>
-      <div className="text-2xl font-bold text-slate-900">{formatNumber(value)}</div>
+      <div className={`text-xl font-bold ${color === 'red' ? 'text-red-600' : color === 'green' ? 'text-green-600' : 'text-slate-900'}`}>
+        {formatNumber(value)}
+      </div>
     </div>
   )
 }
