@@ -17,20 +17,27 @@ export default function Login() {
     setError(null)
     setLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Force a hard navigation to ensure cookies are set
+        window.location.href = '/dashboard'
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   return (
@@ -75,6 +82,7 @@ export default function Login() {
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
                   placeholder="you@agency.com"
                   required
+                  disabled={loading}
                 />
               </div>
               
@@ -90,6 +98,7 @@ export default function Login() {
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
               </div>
 
