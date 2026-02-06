@@ -11,16 +11,19 @@ export default async function ClientsPage() {
     redirect('/login')
   }
 
-  // Get user's agency
-  const { data: membership } = await supabase
+  // Get user's agency (first if multiple)
+  const { data: memberships } = await supabase
     .from('agency_members')
     .select('agency_id')
     .eq('user_id', user.id)
-    .single()
+    .order('created_at', { ascending: true })
+    .limit(1)
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     redirect('/onboarding')
   }
+
+  const membership = memberships[0]
 
   // Get all clients
   const { data: clients } = await supabase

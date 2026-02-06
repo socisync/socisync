@@ -30,18 +30,21 @@ export default function NewClient() {
       return
     }
 
-    // Get user's agency
-    const { data: membership } = await supabase
+    // Get user's agency (first/oldest if multiple)
+    const { data: memberships } = await supabase
       .from('agency_members')
-      .select('agency_id')
+      .select('agency_id, created_at')
       .eq('user_id', user.id)
-      .single()
+      .order('created_at', { ascending: true })
+      .limit(1)
 
-    if (!membership) {
+    if (!memberships || memberships.length === 0) {
       setError('No agency found')
       setLoading(false)
       return
     }
+
+    const membership = memberships[0]
 
     // Create client
     const { data: client, error: insertError } = await supabase
