@@ -79,7 +79,7 @@ export default function SelectMetaPages() {
     const supabase = createClient()
 
     try {
-      for (const pageId of selectedPages) {
+      for (const pageId of Array.from(selectedPages)) {
         const page = pages.find(p => p.id === pageId)
         if (!page) continue
 
