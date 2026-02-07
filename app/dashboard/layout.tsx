@@ -3,9 +3,16 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, FileText, Settings } from 'lucide-react'
+import { 
+  LayoutDashboard, Users, FileText, Settings, Search, 
+  ChevronLeft, ChevronRight, Bell, Zap 
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 import SignOutButton from './sign-out-button'
+import { CommandPalette, useCommandPalette } from '@/components/ui/command-palette'
+import { CreditBalanceMini } from '@/components/credits/credit-balance'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface User {
   id: string
@@ -18,6 +25,11 @@ interface Agency {
   slug: string
 }
 
+interface Client {
+  id: string
+  name: string
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -28,6 +40,12 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [agency, setAgency] = useState<Agency | null>(null)
+  const [clients, setClients] = useState<Client[]>([])
+  const [collapsed, setCollapsed] = useState(false)
+  const { open: commandOpen, setOpen: setCommandOpen } = useCommandPalette()
+
+  // Credit balance (demo values - would come from API)
+  const [credits] = useState({ current: 377, total: 500 })
 
   useEffect(() => {
     async function checkAuth() {
@@ -44,13 +62,23 @@ export default function DashboardLayout({
       // Get agency
       const { data: membership } = await supabase
         .from('agency_members')
-        .select('role, agencies(name, slug)')
+        .select('role, agency_id, agencies(name, slug)')
         .eq('user_id', user.id)
         .limit(1)
         .single()
 
       if (membership?.agencies) {
         setAgency(membership.agencies as unknown as Agency)
+
+        // Get clients for command palette
+        const { data: clientsData } = await supabase
+          .from('clients')
+          .select('id, name')
+          .eq('agency_id', membership.agency_id)
+          .order('name')
+          .limit(20)
+
+        setClients(clientsData || [])
       }
 
       setLoading(false)
@@ -59,93 +87,205 @@ export default function DashboardLayout({
     checkAuth()
   }, [router])
 
+  // Keyboard shortcut for sidebar collapse
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '\\' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setCollapsed(prev => !prev)
+      }
+    }
+    
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-500">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
+      <aside className={cn(
+        "bg-card border-r flex flex-col transition-all duration-200",
+        collapsed ? "w-16" : "w-64"
+      )}>
         {/* Logo */}
-        <div className="h-16 border-b border-slate-200 flex items-center px-6">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
+        <div className="h-16 border-b flex items-center justify-between px-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-primary-foreground font-bold text-lg">S</span>
             </div>
-            <span className="text-xl font-bold text-slate-900">Socisync</span>
+            {!collapsed && <span className="text-xl font-bold">Socisync</span>}
           </Link>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 hover:bg-muted rounded transition-colors"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
         </div>
 
         {/* Agency Name */}
-        {agency && (
-          <div className="px-6 py-4 border-b border-slate-200">
-            <p className="text-xs text-slate-500 uppercase tracking-wider">Agency</p>
-            <p className="font-medium text-slate-900 truncate">{agency.name}</p>
+        {agency && !collapsed && (
+          <div className="px-4 py-3 border-b">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Agency</p>
+            <p className="font-medium truncate">{agency.name}</p>
           </div>
         )}
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          <NavLink href="/dashboard" active={pathname === '/dashboard'} icon={<LayoutDashboard className="w-5 h-5" />}>
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          <NavLink 
+            href="/dashboard" 
+            active={pathname === '/dashboard'} 
+            icon={<LayoutDashboard className="w-5 h-5" />}
+            collapsed={collapsed}
+          >
             Dashboard
           </NavLink>
-          <NavLink href="/dashboard/clients" active={pathname?.startsWith('/dashboard/clients')} icon={<Users className="w-5 h-5" />}>
+          <NavLink 
+            href="/dashboard/clients" 
+            active={pathname?.startsWith('/dashboard/clients')} 
+            icon={<Users className="w-5 h-5" />}
+            collapsed={collapsed}
+          >
             Clients
           </NavLink>
-          <NavLink href="/dashboard/reports" active={pathname?.startsWith('/dashboard/reports')} icon={<FileText className="w-5 h-5" />}>
+          <NavLink 
+            href="/dashboard/reports" 
+            active={pathname?.startsWith('/dashboard/reports')} 
+            icon={<FileText className="w-5 h-5" />}
+            collapsed={collapsed}
+          >
             Reports
           </NavLink>
-          <NavLink href="/dashboard/settings" active={pathname?.startsWith('/dashboard/settings')} icon={<Settings className="w-5 h-5" />}>
+          <NavLink 
+            href="/dashboard/settings" 
+            active={pathname?.startsWith('/dashboard/settings')} 
+            icon={<Settings className="w-5 h-5" />}
+            collapsed={collapsed}
+          >
             Settings
           </NavLink>
         </nav>
 
+        {/* Credits indicator */}
+        {!collapsed && (
+          <div className="px-3 pb-3">
+            <CreditBalanceMini current={credits.current} total={credits.total} />
+          </div>
+        )}
+
         {/* User Section */}
         {user && (
-          <div className="border-t border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-slate-600">
+          <div className="border-t p-3">
+            <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-medium text-muted-foreground">
                   {user.email?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">
-                  {user.user_metadata?.full_name || user.email}
-                </p>
-                <p className="text-xs text-slate-500 truncate">{user.email}</p>
-              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {user.user_metadata?.full_name || user.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+              )}
             </div>
-            <SignOutButton />
+            {!collapsed && <SignOutButton />}
           </div>
         )}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top Header */}
+        <header className="h-16 border-b bg-card flex items-center justify-between px-6">
+          <div className="flex items-center gap-4">
+            {/* Breadcrumb would go here */}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Search trigger */}
+            <Button
+              variant="outline"
+              className="hidden md:flex items-center gap-2 text-muted-foreground"
+              onClick={() => setCommandOpen(true)}
+            >
+              <Search className="w-4 h-4" />
+              <span>Search...</span>
+              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setCommandOpen(true)}>
+              <Search className="w-5 h-5" />
+            </Button>
+
+            {/* Notifications */}
+            <Button variant="ghost" size="icon">
+              <Bell className="w-5 h-5" />
+            </Button>
+
+            {/* Quick credit status */}
+            <Link 
+              href="/dashboard/settings/credits"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+            >
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{credits.current}</span>
+            </Link>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6 overflow-auto">
+          {children}
+        </main>
+      </div>
+
+      {/* Command Palette */}
+      <CommandPalette 
+        open={commandOpen} 
+        onOpenChange={setCommandOpen} 
+        clients={clients}
+      />
     </div>
   )
 }
 
-function NavLink({ href, icon, children, active }: { href: string, icon: React.ReactNode, children: React.ReactNode, active?: boolean }) {
+interface NavLinkProps {
+  href: string
+  icon: React.ReactNode
+  children: React.ReactNode
+  active?: boolean
+  collapsed?: boolean
+}
+
+function NavLink({ href, icon, children, active, collapsed }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+      className={cn(
+        "flex items-center gap-3 px-3 py-2 rounded-lg transition",
         active 
-          ? 'bg-primary-50 text-primary-700' 
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-      }`}
+          ? 'bg-primary/10 text-primary' 
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+        collapsed && "justify-center px-2"
+      )}
+      title={collapsed ? String(children) : undefined}
     >
       {icon}
-      <span>{children}</span>
+      {!collapsed && <span>{children}</span>}
     </Link>
   )
 }
